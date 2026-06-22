@@ -16,5 +16,8 @@ namespace Modules.Clicker.View
         void PlayClickAnimation();
         void PlayClickSound();
         void ShowEnergyDepletedEffect();
+        void PlayCurrencyIconAnimation();
+        void PlayEnergyIconAnimation();
+        void PlayEnergyDepletedIconAnimation();
     }
 }

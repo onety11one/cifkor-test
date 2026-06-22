@@ -28,10 +28,16 @@ namespace Modules.Clicker.Presenter
         {
             BindView();
             BindModel();
+            BindVFX();
             StartAutoCollect();
             StartEnergyRestore();
         }
-        
+
+        private void BindVFX()
+        {
+            _vfxManager.OnCoinReachedTarget += HandleCoinReachedTarget;
+        }
+
         private void BindView()
         {
             _view.OnClickButton
@@ -48,20 +54,44 @@ namespace Modules.Clicker.Presenter
         private void BindModel()
         {
             _model.Currency
-                .Subscribe(value => _view.SetCurrencyText($"{_config.CurrencyName}: {value}"))
+                .Pairwise()
+                .Where(pair => pair.Previous != pair.Current)
+                .Subscribe(pair =>
+                {
+                    _view.SetCurrencyText($"{pair.Current}");
+                })
                 .AddTo(_disposables);
             
             _model.Energy
-                .Subscribe(value => _view.SetEnergyText($"Energy: {value}/{_config.MaxEnergy}"))
+                .Pairwise()
+                .Where(pair => pair.Previous != pair.Current)
+                .Subscribe(pair =>
+                {
+                    _view.SetEnergyText($"{pair.Current}/{_config.MaxEnergy}");
+                    
+                    if (pair.Current > pair.Previous)
+                    {
+                        _view.PlayEnergyIconAnimation();
+                    }
+                    else if (pair.Current < pair.Previous && pair.Current < _config.MaxEnergy * 0.2f)
+                    {
+                        _view.PlayEnergyDepletedIconAnimation();
+                    }
+                })
                 .AddTo(_disposables);
         }
         
         private void HandleClick()
         {
-            if (!_model.TrySpendEnergy(_config.ClickEnergyCost)) return;
-            
+            if (!_model.TrySpendEnergy(_config.ClickEnergyCost))
+            {
+                _view.ShowEnergyDepletedEffect();
+                _view.PlayEnergyDepletedIconAnimation();
+                return;
+            }
+        
             _model.AddCurrency(_config.ClickReward);
-            
+        
             PlayVFX();
         }
         
@@ -108,11 +138,21 @@ namespace Modules.Clicker.Presenter
                 .AddTo(_disposables);
         }
         
+        private void HandleCoinReachedTarget()
+        {
+            _view.PlayCurrencyIconAnimation();
+        }
+        
         public void Dispose()
         {
             _disposables?.Dispose();
             _autoCollectSubscription?.Dispose();
             _model?.Dispose();
+            
+            if (_vfxManager != null)
+            {
+                _vfxManager.OnCoinReachedTarget -= HandleCoinReachedTarget;
+            }
         }
     }
 }

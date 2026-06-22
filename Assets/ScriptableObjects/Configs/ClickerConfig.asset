@@ -21,7 +21,7 @@ MonoBehaviour:
   MaxEnergy: 1000
   EnergyRestoreAmount: 10
   EnergyRestoreInterval: 10
-  InitialEnergy: 1000
+  InitialEnergy: 150
   ParticleLifetime: 1
   CoinFlyDuration: 0.5
   ButtonPressScale: 0.9

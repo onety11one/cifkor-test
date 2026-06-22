@@ -12,6 +12,8 @@ namespace Modules.Clicker.VFX
         private readonly ClickerConfig _config;
         private readonly CompositeDisposable _disposables = new();
         
+        public event Action OnCoinReachedTarget;
+        
         public ClickerVFXManager(
             ClickParticlesPool particlePool,
             FlyingCoinPoolImpl coinPool,
@@ -45,6 +47,7 @@ namespace Modules.Clicker.VFX
                 _coinPool.Despawn(coin);
                 coin.localScale = Vector3.one;
                 onComplete?.Invoke();
+                OnCoinReachedTarget?.Invoke();
             });
         }
         
